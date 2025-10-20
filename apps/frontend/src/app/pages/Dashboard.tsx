@@ -1,10 +1,9 @@
 import { useState, useMemo, useEffect } from 'react';
 import { jwtDecode } from 'jwt-decode';
 import { Button } from '../../ui/button';
-import { Input } from '../../ui/input';
 import { Badge } from '../../ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../ui/card';
-import { LogOut, Plus, Search, StickyNote } from 'lucide-react';
+import { Card, CardDescription, CardHeader, CardTitle } from '../../ui/card';
+import { LogOut, Plus, StickyNote } from 'lucide-react';
 import { NoteCard } from '../components/NoteCard';
 import { NoteDialog } from '../components/NoteDialog';
 import type { Note, User } from '../app';
@@ -22,8 +21,6 @@ export function Dashboard({ onLogout }: DashboardProps) {
   const [notes, setNotes] = useState<Note[]>([]);
   const [filterTags, setFilterTags] = useState<string[]>([]);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   useEffect(() => {
     if (!token) return;
@@ -72,21 +69,17 @@ export function Dashboard({ onLogout }: DashboardProps) {
   // Filter notes based on search and selected tags
   const filteredNotes = useMemo(() => {
     return notes.filter(note => {
-      // Filter by search query
-      const matchesSearch = searchQuery === '' || 
-        note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        note.content.toLowerCase().includes(searchQuery.toLowerCase());
 
       // Filter by selected tags
-      const matchesTags = selectedTags.length === 0 ||
-        selectedTags.every(tag => note.tags.includes(tag));
+      const matchesTags = filterTags.length === 0 ||
+        filterTags.every(tag => note.tags.includes(tag));
 
-      return matchesSearch && matchesTags;
+      return matchesTags;
     });
-  }, [notes, searchQuery, selectedTags]);
+  }, [notes, filterTags]);
 
   const toggleTag = (tag: string) => {
-    setSelectedTags(prev => 
+    setFilterTags(prev => 
       prev.includes(tag)
         ? prev.filter(t => t !== tag)
         : [...prev, tag]
@@ -134,18 +127,18 @@ export function Dashboard({ onLogout }: DashboardProps) {
               {allTags.map(tag => (
                 <Badge
                   key={tag}
-                  variant={selectedTags.includes(tag) ? 'default' : 'outline'}
+                  variant={filterTags.includes(tag) ? 'default' : 'outline'}
                   className="cursor-pointer"
                   onClick={() => toggleTag(tag)}
                 >
                   {tag}
                 </Badge>
               ))}
-              {selectedTags.length > 0 && (
+              {filterTags.length > 0 && (
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setSelectedTags([])}
+                  onClick={() => setFilterTags([])}
                 >
                   Clear filters
                 </Button>
@@ -160,7 +153,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
             <CardHeader>
               <CardTitle>No notes found</CardTitle>
               <CardDescription>
-                {searchQuery || selectedTags.length > 0
+                { filterTags.length > 0
                   ? 'Try adjusting your search or filters'
                   : 'Get started by creating your first note'}
               </CardDescription>

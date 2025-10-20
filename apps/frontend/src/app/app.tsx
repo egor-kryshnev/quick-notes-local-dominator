@@ -1,6 +1,5 @@
-import { Route, Routes, Link, BrowserRouter, useNavigate } from 'react-router-dom';
+import { Route, Routes, useNavigate } from 'react-router-dom';
 import { Login } from './pages/Login';
-import { useState } from 'react';
 import { api, setToken } from './api';
 import { Register } from './pages/Register';
 import { Dashboard } from './pages/Dashboard';
@@ -22,7 +21,6 @@ export type Note = {
 export function App() {
   const navigate = useNavigate();
   const token = localStorage.getItem('token');
-  const [user, setUser] = useState<User | null>(null);
 
   const handleLogin = async (username: string, password: string) => {
     try {
@@ -30,7 +28,6 @@ export function App() {
       const token = res.data.access_token;
       localStorage.setItem('token', token);
       setToken(token);
-      setUser({ username });
       navigate('/dashboard');
     } catch (err) {
       alert('Login failed');
