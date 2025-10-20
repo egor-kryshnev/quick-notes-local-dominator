@@ -1,0 +1,54 @@
+FROM node:20-alpine AS base
+
+FROM base AS deps
+ARG VITE_API_URL
+ENV VITE_API_URL $VITE_API_URL
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+
+RUN echo $VITE_API_URL
+
+COPY package*.json ./
+COPY nx.json ./
+COPY tsconfig.base.json ./
+COPY tsconfig.json ./
+COPY eslint.config.* ./
+COPY .eslintrc* ./
+
+RUN npm ci && npm cache clean --force
+
+FROM base AS builder
+WORKDIR /app
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/package*.json ./
+COPY --from=deps /app/nx.json ./
+COPY --from=deps /app/tsconfig.base.json ./
+COPY --from=deps /app/tsconfig.json ./
+COPY --from=deps /app/eslint.config.* ./
+COPY --from=deps /app/.eslintrc* ./
+
+COPY tsconfig*.json ./
+
+COPY apps/frontend/ ./apps/frontend/
+
+ARG VITE_API_URL
+ENV VITE_API_URL $VITE_API_URL
+
+RUN NX_DAEMON=false npx nx sync
+RUN NX_DAEMON=false npx nx build frontend
+
+FROM base AS runner
+WORKDIR /app
+
+
+COPY --from=builder /app/apps/frontend/dist apps/frontend/dist
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/nx.json ./
+COPY --from=builder /app/node_modules ./node_modules
+
+FROM nginx:alpine
+
+COPY --from=runner  /app/apps/frontend/dist /usr/share/nginx/html
+
+EXPOSE 80
