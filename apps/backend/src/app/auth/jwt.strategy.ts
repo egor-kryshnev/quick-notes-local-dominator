@@ -7,6 +7,11 @@ export interface IUser {
     username: string
 }
 
+interface JwtPayload {
+  sub: number;
+  username: string;
+}
+
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor() {
@@ -16,7 +21,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: any): Promise<IUser> {
+  async validate(payload: JwtPayload): Promise<IUser> {
     return { userId: payload.sub, username: payload.username };
   }
 }

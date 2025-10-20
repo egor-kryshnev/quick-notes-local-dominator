@@ -1,4 +1,5 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import { Note } from '@prisma/client';
 import Redis from 'ioredis';
 
 @Injectable()
@@ -25,7 +26,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     return data ? JSON.parse(data) : null;
   }
 
-  async set(key: string, value: any, ttlSeconds = 60) {
+  async set(key: string, value: Note[], ttlSeconds = 60) {
     await this.client?.set(key, JSON.stringify(value), 'EX', ttlSeconds);
   }
 
